@@ -1,0 +1,23 @@
+{
+  "name": "g4-consultations-backend",
+  "version": "1.0.0",
+  "description": "G4 - Consultas module API (Clean Architecture, Express, raw SQL, PostgreSQL)",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "migrate": "node migrations/runner.js",
+    "create-user": "node scripts/create-user.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "pg": "^8.13.0"
+  }
+}
