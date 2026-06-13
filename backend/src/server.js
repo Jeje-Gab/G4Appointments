@@ -50,6 +50,9 @@ function buildGateways() {
   const patientsHttp = new HttpClient({
     baseURL: env.external.patientsBaseUrl,
     timeout: env.external.httpTimeoutMs,
+    headers: env.external.patientsToken
+      ? { Authorization: `Bearer ${env.external.patientsToken}` }
+      : {},
   });
   const scheduleHttp = new HttpClient({
     baseURL: env.external.scheduleBaseUrl,

@@ -27,6 +27,7 @@ export const env = {
 
   external: {
     patientsBaseUrl: process.env.PATIENTS_API_BASE_URL || 'http://localhost:3001',
+    patientsToken: process.env.TOKEN_G1 || '',
     scheduleBaseUrl: process.env.SCHEDULE_API_BASE_URL || 'http://localhost:3002',
     httpTimeoutMs: int(process.env.EXTERNAL_HTTP_TIMEOUT_MS, 5000),
   },

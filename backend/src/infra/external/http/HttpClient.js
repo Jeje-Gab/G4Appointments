@@ -3,11 +3,11 @@ import axios from 'axios';
 // Thin wrapper around axios so gateways depend on a small, swappable surface
 // instead of axios directly. One instance per external base URL.
 export class HttpClient {
-  constructor({ baseURL, timeout = 5000 } = {}) {
+  constructor({ baseURL, timeout = 5000, headers = {} } = {}) {
     this.client = axios.create({
       baseURL,
       timeout,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...headers },
       // We handle non-2xx ourselves where it matters (e.g. 404 -> null).
       validateStatus: () => true,
     });

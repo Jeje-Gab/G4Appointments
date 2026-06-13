@@ -2,7 +2,8 @@ import { PatientsGateway } from './PatientsGateway.js';
 import { ExternalServiceError } from '../../../errors/index.js';
 
 // Real HTTP implementation of the G1 - Patients gateway.
-// Expects: GET {baseURL}/patients/:id  -> 200 { ...patient } | 404
+// Expects: GET {baseURL}/paciente/:id  -> 200 G1Patient | 404 { message }
+// Shape of G1Patient is documented in G1PatientSchema.js.
 export class HttpPatientsGateway extends PatientsGateway {
   constructor(httpClient) {
     super();
@@ -12,7 +13,7 @@ export class HttpPatientsGateway extends PatientsGateway {
   async findPatientById(patientId) {
     let response;
     try {
-      response = await this.http.get(`/patients/${encodeURIComponent(patientId)}`);
+      response = await this.http.get(`/paciente/${encodeURIComponent(patientId)}`);
     } catch (err) {
       throw new ExternalServiceError(`G1 (Patients) request failed: ${err.message}`);
     }
