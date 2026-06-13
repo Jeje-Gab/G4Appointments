@@ -1,0 +1,14 @@
+{
+  "name": "g4-external-consumer-example",
+  "version": "1.0.0",
+  "description": "Exemplo de como um módulo externo (G5/G7/G10/G11/G13) consome a API externa do G4 - Consultas",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node examples/consume.js",
+    "serve-docs": "npx --yes http-server . -p 8080 -o /swagger.html"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,284 @@
+openapi: 3.0.3
+
+info:
+  title: G4 - Consultas — API Externa
+  version: "1.0.0"
+  description: >
+    API **externa, versionada e somente-leitura** do módulo **G4 - Consultas**,
+    consumida pelos módulos G5 (Prontuário), G7 (Exames), G10 (Faturamento),
+    G11 (Triagem) e G13 (Autorização).
+
+
+    Toda chamada exige uma **API Key** emitida pelo G4 (uma por grupo consumidor).
+    Envie-a no header `Authorization: ApiKey <chave>` **ou** `X-API-Key: <chave>`.
+    A chave é um segredo de **servidor** — use-a no backend do seu módulo, nunca no navegador.
+
+
+    Base do contrato: `/external/v1`. As rotas `/api/*` são internas e não fazem parte deste contrato.
+  contact:
+    name: Time G4 - Consultas
+
+servers:
+  - url: http://localhost:3000
+    description: Ambiente local
+
+tags:
+  - name: Consultations
+    description: Leitura de consultas
+  - name: Patient history
+    description: Histórico de consultas realizadas por paciente
+
+security:
+  - ApiKeyHeader: []
+  - AuthorizationApiKey: []
+
+paths:
+  /external/v1/consultations:
+    get:
+      tags: [Consultations]
+      summary: Lista consultas
+      description: Lista consultas com filtros opcionais. Todos os filtros são combináveis (AND).
+      operationId: listConsultations
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filtra por status.
+          schema:
+            $ref: '#/components/schemas/ConsultationStatus'
+        - name: patientId
+          in: query
+          required: false
+          description: Filtra pelo identificador do paciente (G1).
+          schema:
+            type: string
+          example: "p1"
+        - name: startDate
+          in: query
+          required: false
+          description: "Limite inferior de `scheduledAt` (inclusive). ISO-8601 (data ou data-hora)."
+          schema:
+            type: string
+            format: date-time
+          example: "2026-01-01"
+        - name: endDate
+          in: query
+          required: false
+          description: "Limite superior de `scheduledAt` (inclusive). ISO-8601 (data ou data-hora)."
+          schema:
+            type: string
+            format: date-time
+          example: "2026-12-31"
+      responses:
+        "200":
+          description: Lista de consultas.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsultationListResponse'
+        "400":
+          $ref: '#/components/responses/ValidationError'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /external/v1/consultations/{id}:
+    get:
+      tags: [Consultations]
+      summary: Busca consulta por ID
+      operationId: getConsultationById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID da consulta.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Consulta encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsultationResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /external/v1/patients/{patientId}/consultations/history:
+    get:
+      tags: [Patient history]
+      summary: Histórico de consultas realizadas de um paciente
+      description: >
+        Retorna **apenas** consultas com status `completed` do paciente,
+        ordenadas da mais recente para a mais antiga. É o endpoint principal
+        para os módulos consumidores.
+      operationId: getPatientHistory
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          description: Identificador do paciente (G1).
+          schema:
+            type: string
+          example: "p1"
+      responses:
+        "200":
+          description: Histórico do paciente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientHistoryResponse'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: "Chave da API diretamente no header X-API-Key."
+    AuthorizationApiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: "Header Authorization no formato: `ApiKey <sua-chave>`."
+
+  schemas:
+    ConsultationStatus:
+      type: string
+      enum: [scheduled, completed, cancelled]
+      description: "Agendada (scheduled), realizada (completed) ou cancelada (cancelled)."
+
+    Consultation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          description: Referência ao paciente (módulo G1).
+          example: "p1"
+        slotId:
+          type: string
+          description: Referência ao horário (módulo G3).
+          example: "slotA"
+        scheduledAt:
+          type: string
+          format: date-time
+        doctorName:
+          type: string
+          example: "Dr. João Silva"
+        specialty:
+          type: string
+          example: "Cardiologia"
+        status:
+          $ref: '#/components/schemas/ConsultationStatus'
+        notes:
+          type: string
+          nullable: true
+          example: "Consulta de rotina"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required: [id, patientId, slotId, scheduledAt, doctorName, specialty, status]
+
+    ConsultationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Consultation'
+
+    ConsultationListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Consultation'
+
+    PatientHistory:
+      type: object
+      properties:
+        patientId:
+          type: string
+          example: "p1"
+        total:
+          type: integer
+          example: 1
+        consultations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Consultation'
+
+    PatientHistoryResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/PatientHistory'
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Invalid or revoked API key."
+        code:
+          type: string
+          example: "UNAUTHORIZED"
+        details:
+          nullable: true
+          example: null
+      required: [error, message]
+
+  responses:
+    Unauthorized:
+      description: API key ausente, inválida ou revogada.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: true
+            message: "API key required (Authorization: ApiKey <key>)."
+            code: "UNAUTHORIZED"
+            details: null
+    NotFound:
+      description: Recurso não encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: true
+            message: "Consultation \"<id>\" was not found."
+            code: "CONSULTATION_NOT_FOUND"
+            details: null
+    ValidationError:
+      description: Parâmetro de filtro inválido.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: true
+            message: "status must be one of: scheduled, completed, cancelled."
+            code: "VALIDATION_ERROR"
+            details: null

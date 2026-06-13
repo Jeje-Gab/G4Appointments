@@ -1,0 +1,31 @@
+### G4 - Consultas — API Externa
+### Compatível com o HTTP Client do IntelliJ/WebStorm e a extensão REST Client (VS Code).
+### Preencha @apiKey com uma chave gerada no G4 (Admin -> API Keys).
+
+@baseUrl = http://localhost:3000
+@apiKey = cole_sua_chave_aqui
+@patientId = p1
+
+### 1) Histórico de consultas realizadas do paciente (somente status=completed)
+GET {{baseUrl}}/external/v1/patients/{{patientId}}/consultations/history
+Authorization: ApiKey {{apiKey}}
+Accept: application/json
+
+### 2) Listar consultas (filtros opcionais: status, patientId, startDate, endDate)
+GET {{baseUrl}}/external/v1/consultations?status=completed
+Authorization: ApiKey {{apiKey}}
+Accept: application/json
+
+### 2b) Listar com o header alternativo X-API-Key (em vez de Authorization)
+GET {{baseUrl}}/external/v1/consultations?patientId={{patientId}}
+X-API-Key: {{apiKey}}
+Accept: application/json
+
+### 3) Buscar consulta por ID (troque <id> por um id real)
+GET {{baseUrl}}/external/v1/consultations/<id>
+Authorization: ApiKey {{apiKey}}
+Accept: application/json
+
+### 4) Sem chave -> deve retornar 401 (demonstra a proteção)
+GET {{baseUrl}}/external/v1/consultations
+Accept: application/json
