@@ -19,6 +19,8 @@ info:
     name: Time G4 - Consultas
 
 servers:
+  - url: https://g4-consultations-backend.onrender.com
+    description: Produção (Render)
   - url: http://localhost:3000
     description: Ambiente local
 

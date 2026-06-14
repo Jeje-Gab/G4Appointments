@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createConsultation } from '../services/consultationsApi.js';
+import { listPatients } from '../services/patientsApi.js';
 import Alert from '../components/Alert.jsx';
 
 const EMPTY = {
@@ -13,10 +14,19 @@ const EMPTY = {
 
 export default function CreateConsultationPage({ onCreated }) {
   const [form, setForm] = useState(EMPTY);
+  const [patients, setPatients] = useState([]);
+  const [patientsLoading, setPatientsLoading] = useState(true);
   const [error, setError] = useState('');
   const [details, setDetails] = useState(null);
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    listPatients()
+      .then(setPatients)
+      .catch(() => setPatients([]))
+      .finally(() => setPatientsLoading(false));
+  }, []);
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -62,13 +72,22 @@ export default function CreateConsultationPage({ onCreated }) {
       <form onSubmit={handleSubmit}>
         <div className="form-grid">
           <div className="field">
-            <label htmlFor="patientId">Paciente (patientId) *</label>
-            <input
+            <label htmlFor="patientId">Paciente *</label>
+            <select
               id="patientId"
               value={form.patientId}
-              placeholder="ex: p1"
               onChange={(e) => update('patientId', e.target.value)}
-            />
+              disabled={patientsLoading}
+            >
+              <option value="">
+                {patientsLoading ? 'Carregando pacientes…' : 'Selecione um paciente'}
+              </option>
+              {patients.map((p) => (
+                <option key={p.idpaciente} value={p.idpaciente}>
+                  {p.nome} — CPF: {p.cpf}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="field">
             <label htmlFor="slotId">Horário (slotId) *</label>

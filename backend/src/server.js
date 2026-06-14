@@ -20,6 +20,9 @@ import { GetConsultationByIdUseCase } from './usecases/GetConsultationByIdUseCas
 import { ListConsultationsUseCase } from './usecases/ListConsultationsUseCase.js';
 import { GetPatientConsultationHistoryUseCase } from './usecases/GetPatientConsultationHistoryUseCase.js';
 
+// Use cases — patients (G1 proxy)
+import { ListPatientsUseCase } from './usecases/ListPatientsUseCase.js';
+
 // Use cases — auth / admin
 import { AuthenticateApiKeyUseCase } from './usecases/AuthenticateApiKeyUseCase.js';
 import { CreateApiClientUseCase } from './usecases/CreateApiClientUseCase.js';
@@ -35,6 +38,7 @@ import { ChangeUserPasswordUseCase } from './usecases/ChangeUserPasswordUseCase.
 import { ConsultationHandler } from './handlers/ConsultationHandler.js';
 import { AuthHandler } from './handlers/AuthHandler.js';
 import { AdminHandler } from './handlers/AdminHandler.js';
+import { PatientsHandler } from './handlers/PatientsHandler.js';
 
 // ----- Composition root: wire concrete dependencies into the use cases -----
 
@@ -93,6 +97,10 @@ function buildDependencies() {
   };
   const consultationHandler = new ConsultationHandler(consultationUseCases);
 
+  const patientsHandler = new PatientsHandler({
+    listPatients: new ListPatientsUseCase({ patientsGateway }),
+  });
+
   // Auth use cases (used by middlewares + auth handler)
   const authenticateApiKeyUseCase = new AuthenticateApiKeyUseCase({ apiClientRepository });
   const authenticateSessionUseCase = new AuthenticateSessionUseCase({ userRepository });
@@ -114,6 +122,7 @@ function buildDependencies() {
 
   return {
     consultationHandler,
+    patientsHandler,
     authHandler,
     adminHandler,
     authenticateApiKeyUseCase,

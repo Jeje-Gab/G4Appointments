@@ -5,4 +5,9 @@ export class PatientsGateway {
   async findPatientById(patientId) {
     throw new Error('PatientsGateway.findPatientById not implemented');
   }
+
+  // Return all patients as an array (empty array when none found).
+  async listPatients() {
+    throw new Error('PatientsGateway.listPatients not implemented');
+  }
 }
