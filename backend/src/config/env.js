@@ -30,6 +30,7 @@ export const env = {
     patientsToken: process.env.TOKEN_G1 || '',
     patientsTimeoutMs: int(process.env.PATIENTS_HTTP_TIMEOUT_MS, 60000),
     scheduleBaseUrl: process.env.SCHEDULE_API_BASE_URL || 'http://localhost:3002',
+    scheduleTimeoutMs: int(process.env.SCHEDULE_HTTP_TIMEOUT_MS, 60000),
     httpTimeoutMs: int(process.env.EXTERNAL_HTTP_TIMEOUT_MS, 5000),
   },
 

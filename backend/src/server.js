@@ -69,7 +69,7 @@ function buildGateways() {
     ? new MockScheduleGateway()
     : new HttpScheduleGateway(new HttpClient({
         baseURL: env.external.scheduleBaseUrl,
-        timeout: env.external.httpTimeoutMs,
+        timeout: env.external.scheduleTimeoutMs,
       }));
 
   return { patientsGateway, scheduleGateway };
