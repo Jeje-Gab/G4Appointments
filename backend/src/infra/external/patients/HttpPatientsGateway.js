@@ -15,7 +15,7 @@ export class HttpPatientsGateway extends PatientsGateway {
     try {
       response = await this.http.get(`/paciente/${encodeURIComponent(patientId)}`);
     } catch (err) {
-      throw new ExternalServiceError(`G1 (Patients) request failed: ${err.message}`);
+      throw new ExternalServiceError(`G1 (Patients) request failed: ${err.message || err.code || 'network error'}`);
     }
 
     if (response.status === 404) return null;
@@ -31,7 +31,7 @@ export class HttpPatientsGateway extends PatientsGateway {
     try {
       response = await this.http.get('/paciente');
     } catch (err) {
-      throw new ExternalServiceError(`G1 (Patients) request failed: ${err.message}`);
+      throw new ExternalServiceError(`G1 (Patients) request failed: ${err.message || err.code || 'network error'}`);
     }
 
     // G1 returns 404 when there are no patients — treat as empty list.
@@ -43,5 +43,19 @@ export class HttpPatientsGateway extends PatientsGateway {
     throw new ExternalServiceError(
       `G1 (Patients) returned unexpected status ${response.status}.`,
     );
+  }
+
+  async createPatient(data) {
+    let response;
+    try {
+      response = await this.http.post('/paciente', data);
+    } catch (err) {
+      throw new ExternalServiceError(`G1 (Patients) request failed: ${err.message || err.code || 'network error'}`);
+    }
+
+    if (response.status >= 200 && response.status < 300) return response.data;
+
+    const message = response.data?.message || `status ${response.status}`;
+    throw new ExternalServiceError(`G1 (Patients) error: ${message}`);
   }
 }

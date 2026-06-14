@@ -10,4 +10,9 @@ export class PatientsGateway {
   async listPatients() {
     throw new Error('PatientsGateway.listPatients not implemented');
   }
+
+  // Create a patient in G1. Returns the created patient object.
+  async createPatient(data) {
+    throw new Error('PatientsGateway.createPatient not implemented');
+  }
 }

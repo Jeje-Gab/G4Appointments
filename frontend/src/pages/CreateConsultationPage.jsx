@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { createConsultation } from '../services/consultationsApi.js';
 import { listPatients } from '../services/patientsApi.js';
+import { listAvailableSlots } from '../services/slotsApi.js';
+import { formatDateTime } from '../components/formatters.js';
 import Alert from '../components/Alert.jsx';
 
 const EMPTY = {
@@ -16,6 +18,8 @@ export default function CreateConsultationPage({ onCreated }) {
   const [form, setForm] = useState(EMPTY);
   const [patients, setPatients] = useState([]);
   const [patientsLoading, setPatientsLoading] = useState(true);
+  const [slots, setSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(true);
   const [error, setError] = useState('');
   const [details, setDetails] = useState(null);
   const [success, setSuccess] = useState('');
@@ -26,10 +30,30 @@ export default function CreateConsultationPage({ onCreated }) {
       .then(setPatients)
       .catch(() => setPatients([]))
       .finally(() => setPatientsLoading(false));
+
+    listAvailableSlots()
+      .then(setSlots)
+      .catch(() => setSlots([]))
+      .finally(() => setSlotsLoading(false));
   }, []);
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  function handleSlotChange(slotId) {
+    const slot = slots.find((s) => String(s.id) === slotId);
+    if (slot) {
+      setForm((f) => ({
+        ...f,
+        slotId: slot.id,
+        scheduledAt: slot.startsAt,
+        doctorName: slot.doctorName,
+        specialty: slot.specialty,
+      }));
+    } else {
+      setForm((f) => ({ ...f, slotId: '', scheduledAt: '', doctorName: '', specialty: '' }));
+    }
   }
 
   async function handleSubmit(e) {
@@ -39,13 +63,10 @@ export default function CreateConsultationPage({ onCreated }) {
     setSuccess('');
     setSubmitting(true);
     try {
-      // datetime-local gives "YYYY-MM-DDTHH:mm"; convert to ISO for the API.
-      const payload = {
+      const created = await createConsultation({
         ...form,
-        scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : '',
         notes: form.notes || null,
-      };
-      const created = await createConsultation(payload);
+      });
       setSuccess(`Consulta criada com sucesso (id: ${created.id}).`);
       setForm(EMPTY);
       if (onCreated) onCreated(created);
@@ -56,6 +77,8 @@ export default function CreateConsultationPage({ onCreated }) {
       setSubmitting(false);
     }
   }
+
+  const selectedSlot = slots.find((s) => String(s.id) === String(form.slotId));
 
   return (
     <div className="card">
@@ -71,6 +94,7 @@ export default function CreateConsultationPage({ onCreated }) {
 
       <form onSubmit={handleSubmit}>
         <div className="form-grid">
+
           <div className="field">
             <label htmlFor="patientId">Paciente *</label>
             <select
@@ -89,42 +113,43 @@ export default function CreateConsultationPage({ onCreated }) {
               ))}
             </select>
           </div>
+
           <div className="field">
-            <label htmlFor="slotId">Horário (slotId) *</label>
-            <input
+            <label htmlFor="slotId">Horário disponível *</label>
+            <select
               id="slotId"
               value={form.slotId}
-              placeholder="ex: slotA"
-              onChange={(e) => update('slotId', e.target.value)}
-            />
+              onChange={(e) => handleSlotChange(e.target.value)}
+              disabled={slotsLoading}
+            >
+              <option value="">
+                {slotsLoading ? 'Carregando horários…' : 'Selecione um horário'}
+              </option>
+              {slots.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {formatDateTime(s.startsAt)} — {s.doctorName} ({s.specialty})
+                </option>
+              ))}
+            </select>
           </div>
-          <div className="field">
-            <label htmlFor="scheduledAt">Data/Hora *</label>
-            <input
-              id="scheduledAt"
-              type="datetime-local"
-              value={form.scheduledAt}
-              onChange={(e) => update('scheduledAt', e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="doctorName">Médico *</label>
-            <input
-              id="doctorName"
-              value={form.doctorName}
-              placeholder="ex: Dr. João Silva"
-              onChange={(e) => update('doctorName', e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="specialty">Especialidade *</label>
-            <input
-              id="specialty"
-              value={form.specialty}
-              placeholder="ex: Cardiologia"
-              onChange={(e) => update('specialty', e.target.value)}
-            />
-          </div>
+
+          {selectedSlot && (
+            <>
+              <div className="field">
+                <label>Médico</label>
+                <input value={form.doctorName} readOnly disabled />
+              </div>
+              <div className="field">
+                <label>Especialidade</label>
+                <input value={form.specialty} readOnly disabled />
+              </div>
+              <div className="field">
+                <label>Data/Hora</label>
+                <input value={formatDateTime(form.scheduledAt)} readOnly disabled />
+              </div>
+            </>
+          )}
+
           <div className="field full">
             <label htmlFor="notes">Observações</label>
             <textarea
@@ -136,6 +161,7 @@ export default function CreateConsultationPage({ onCreated }) {
             />
           </div>
         </div>
+
         <div className="actions-row" style={{ marginTop: 16 }}>
           <button className="btn" type="submit" disabled={submitting}>
             {submitting ? 'Agendando…' : 'Agendar'}

@@ -28,11 +28,14 @@ export const env = {
   external: {
     patientsBaseUrl: process.env.PATIENTS_API_BASE_URL || 'http://localhost:3001',
     patientsToken: process.env.TOKEN_G1 || '',
+    patientsTimeoutMs: int(process.env.PATIENTS_HTTP_TIMEOUT_MS, 60000),
     scheduleBaseUrl: process.env.SCHEDULE_API_BASE_URL || 'http://localhost:3002',
     httpTimeoutMs: int(process.env.EXTERNAL_HTTP_TIMEOUT_MS, 5000),
   },
 
   useMockGateways: bool(process.env.USE_MOCK_GATEWAYS, false),
+  useMockPatients: bool(process.env.USE_MOCK_PATIENTS, false),
+  useMockSchedule: bool(process.env.USE_MOCK_SCHEDULE, false),
 
   auth: {
     // Lifetime of a login session token, in hours.

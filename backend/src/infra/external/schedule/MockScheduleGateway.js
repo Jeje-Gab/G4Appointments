@@ -12,6 +12,28 @@ export class MockScheduleGateway extends ScheduleGateway {
     this.reserved = new Map();
   }
 
+  async listAllSlots() {
+    return [
+      { id: 'slot-1', startsAt: '2026-07-01T09:00:00.000Z', doctorName: 'Dr. João Silva', specialty: 'Cardiologia', available: !this.reserved.has('slot-1') },
+      { id: 'slot-2', startsAt: '2026-07-01T10:00:00.000Z', doctorName: 'Dra. Ana Lima', specialty: 'Dermatologia', available: !this.reserved.has('slot-2') },
+      { id: 'slot-3', startsAt: '2026-07-02T14:00:00.000Z', doctorName: 'Dr. Carlos Mendes', specialty: 'Ortopedia', available: !this.reserved.has('slot-3') },
+    ];
+  }
+
+  async createSlot(data) {
+    const slot = { ...data, available: true };
+    return slot;
+  }
+
+  async listAvailableSlots() {
+    const taken = this.reserved;
+    return [
+      { id: 'slot-1', startsAt: '2026-07-01T09:00:00.000Z', doctorName: 'Dr. João Silva', specialty: 'Cardiologia', available: true },
+      { id: 'slot-2', startsAt: '2026-07-01T10:00:00.000Z', doctorName: 'Dra. Ana Lima', specialty: 'Dermatologia', available: true },
+      { id: 'slot-3', startsAt: '2026-07-02T14:00:00.000Z', doctorName: 'Dr. Carlos Mendes', specialty: 'Ortopedia', available: true },
+    ].filter((s) => !taken.has(s.id));
+  }
+
   async getAvailableSlot(slotId) {
     if (UNAVAILABLE_IDS.has(String(slotId))) return null;
     if (this.reserved.has(slotId)) return null;

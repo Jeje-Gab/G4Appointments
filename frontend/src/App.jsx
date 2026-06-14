@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import ConsultationsListPage from './pages/ConsultationsListPage.jsx';
 import CreateConsultationPage from './pages/CreateConsultationPage.jsx';
 import PatientHistoryPage from './pages/PatientHistoryPage.jsx';
+import PatientsPage from './pages/PatientsPage.jsx';
+import SlotsPage from './pages/SlotsPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import UsersAdminPage from './pages/UsersAdminPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
@@ -12,6 +14,8 @@ const TABS = [
   { key: 'list', label: 'Consultas', roles: ['admin', 'user'] },
   { key: 'create', label: 'Agendar', roles: ['admin', 'user'] },
   { key: 'history', label: 'Histórico do paciente', roles: ['admin', 'user'] },
+  { key: 'patients', label: 'Pacientes', roles: ['admin', 'user'] },
+  { key: 'slots', label: 'Horários', roles: ['admin'] },
   { key: 'users', label: 'Usuários', roles: ['admin'] },
   { key: 'admin', label: 'Admin (API Keys)', roles: ['admin'] },
 ];
@@ -91,6 +95,8 @@ export default function App() {
         {activeTab === 'list' && <ConsultationsListPage key={listKey} />}
         {activeTab === 'create' && <CreateConsultationPage onCreated={handleCreated} />}
         {activeTab === 'history' && <PatientHistoryPage />}
+        {activeTab === 'patients' && <PatientsPage />}
+        {activeTab === 'slots' && user.role === 'admin' && <SlotsPage />}
         {activeTab === 'users' && user.role === 'admin' && <UsersAdminPage />}
         {activeTab === 'admin' && user.role === 'admin' && <AdminPage />}
       </main>

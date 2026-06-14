@@ -22,6 +22,11 @@ import { GetPatientConsultationHistoryUseCase } from './usecases/GetPatientConsu
 
 // Use cases — patients (G1 proxy)
 import { ListPatientsUseCase } from './usecases/ListPatientsUseCase.js';
+import { GetPatientByIdUseCase } from './usecases/GetPatientByIdUseCase.js';
+import { CreatePatientUseCase } from './usecases/CreatePatientUseCase.js';
+import { ListAvailableSlotsUseCase } from './usecases/ListAvailableSlotsUseCase.js';
+import { ListAllSlotsUseCase } from './usecases/ListAllSlotsUseCase.js';
+import { CreateSlotUseCase } from './usecases/CreateSlotUseCase.js';
 
 // Use cases — auth / admin
 import { AuthenticateApiKeyUseCase } from './usecases/AuthenticateApiKeyUseCase.js';
@@ -39,33 +44,35 @@ import { ConsultationHandler } from './handlers/ConsultationHandler.js';
 import { AuthHandler } from './handlers/AuthHandler.js';
 import { AdminHandler } from './handlers/AdminHandler.js';
 import { PatientsHandler } from './handlers/PatientsHandler.js';
+import { SlotsHandler } from './handlers/SlotsHandler.js';
 
 // ----- Composition root: wire concrete dependencies into the use cases -----
 
 function buildGateways() {
-  if (env.useMockGateways) {
-    // eslint-disable-next-line no-console
-    console.log('[gateways] USE_MOCK_GATEWAYS=true -> using in-memory mock gateways');
-    return {
-      patientsGateway: new MockPatientsGateway(),
-      scheduleGateway: new MockScheduleGateway(),
-    };
-  }
-  const patientsHttp = new HttpClient({
-    baseURL: env.external.patientsBaseUrl,
-    timeout: env.external.httpTimeoutMs,
-    headers: env.external.patientsToken
-      ? { Authorization: `Bearer ${env.external.patientsToken}` }
-      : {},
-  });
-  const scheduleHttp = new HttpClient({
-    baseURL: env.external.scheduleBaseUrl,
-    timeout: env.external.httpTimeoutMs,
-  });
-  return {
-    patientsGateway: new HttpPatientsGateway(patientsHttp),
-    scheduleGateway: new HttpScheduleGateway(scheduleHttp),
-  };
+  const mockPatients = env.useMockGateways || env.useMockPatients;
+  const mockSchedule = env.useMockGateways || env.useMockSchedule;
+
+  if (mockPatients) console.log('[gateways] patients -> MockPatientsGateway');
+  if (mockSchedule) console.log('[gateways] schedule -> MockScheduleGateway');
+
+  const patientsGateway = mockPatients
+    ? new MockPatientsGateway()
+    : new HttpPatientsGateway(new HttpClient({
+        baseURL: env.external.patientsBaseUrl,
+        timeout: env.external.patientsTimeoutMs,
+        headers: env.external.patientsToken
+          ? { Authorization: `Bearer ${env.external.patientsToken}` }
+          : {},
+      }));
+
+  const scheduleGateway = mockSchedule
+    ? new MockScheduleGateway()
+    : new HttpScheduleGateway(new HttpClient({
+        baseURL: env.external.scheduleBaseUrl,
+        timeout: env.external.httpTimeoutMs,
+      }));
+
+  return { patientsGateway, scheduleGateway };
 }
 
 function buildDependencies() {
@@ -97,8 +104,16 @@ function buildDependencies() {
   };
   const consultationHandler = new ConsultationHandler(consultationUseCases);
 
+  const slotsHandler = new SlotsHandler({
+    listAvailableSlots: new ListAvailableSlotsUseCase({ scheduleGateway }),
+    listAllSlots: new ListAllSlotsUseCase({ scheduleGateway }),
+    createSlot: new CreateSlotUseCase({ scheduleGateway }),
+  });
+
   const patientsHandler = new PatientsHandler({
     listPatients: new ListPatientsUseCase({ patientsGateway }),
+    getPatientById: new GetPatientByIdUseCase({ patientsGateway }),
+    createPatient: new CreatePatientUseCase({ patientsGateway }),
   });
 
   // Auth use cases (used by middlewares + auth handler)
@@ -123,6 +138,7 @@ function buildDependencies() {
   return {
     consultationHandler,
     patientsHandler,
+    slotsHandler,
     authHandler,
     adminHandler,
     authenticateApiKeyUseCase,

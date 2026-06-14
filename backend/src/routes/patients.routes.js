@@ -6,6 +6,8 @@ export function patientsRoutes(patientsHandler) {
   const router = Router();
 
   router.get('/patients', patientsHandler.list);
+  router.get('/patients/:id', patientsHandler.getById);
+  router.post('/patients', patientsHandler.create);
 
   return router;
 }

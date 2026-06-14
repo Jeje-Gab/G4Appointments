@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { consultationsRoutes } from './consultations.routes.js';
 import { patientsRoutes } from './patients.routes.js';
+import { slotsRoutes } from './slots.routes.js';
 import { externalRoutes } from './external.routes.js';
 import { adminRoutes } from './admin.routes.js';
 import { authRoutes } from './auth.routes.js';
@@ -15,6 +16,7 @@ export function buildRouter(deps) {
   const {
     consultationHandler,
     patientsHandler,
+    slotsHandler,
     adminHandler,
     authHandler,
     authenticateApiKeyUseCase,
@@ -34,6 +36,7 @@ export function buildRouter(deps) {
   // Internal consultations + patients proxy: any authenticated user (admin or user).
   router.use('/api', session, consultationsRoutes(consultationHandler));
   router.use('/api', session, patientsRoutes(patientsHandler));
+  router.use('/api', session, slotsRoutes(slotsHandler));
 
   // External, read-only, API-key protected.
   router.use('/external/v1', externalRoutes(consultationHandler, authenticateApiKeyUseCase));
